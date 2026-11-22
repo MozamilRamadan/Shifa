@@ -15,34 +15,41 @@ public class AuthenticationService : IAuthenticationService
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly JwtOptions _jwtOptions;
     private readonly ShifaDbContext _context;
+    private readonly SignInManager<ApplicationUser> _signInManager;
 
     public AuthenticationService(
         UserManager<ApplicationUser> userManager,
         IJwtTokenService jwtTokenService,
         IRefreshTokenService refreshTokenService,
         IOptions<JwtOptions> jwtOptions,
-        ShifaDbContext context )
+        ShifaDbContext context,
+        SignInManager<ApplicationUser> signInManager
+        )
     {
         _userManager = userManager;
         _jwtTokenService = jwtTokenService;
         _refreshTokenService = refreshTokenService;
         _jwtOptions = jwtOptions.Value;
         _context = context;
+        _signInManager = signInManager;
     }
 
     public async Task<AuthenticationResponse?> LoginAsync(
         LoginRequest request)
     {
         var user = await _userManager.FindByEmailAsync(request.Email);
-
-        if (user is null || !user.IsActive)
+        if (user is null)
             return null;
 
-        var passwordValid = await _userManager.CheckPasswordAsync(
-            user,
-            request.Password);
+        if (!user.IsActive)
+            return null;
 
-        if (!passwordValid)
+        var signInResult = await _signInManager.CheckPasswordSignInAsync(
+            user,
+            request.Password,
+            lockoutOnFailure: true);
+
+        if (!signInResult.Succeeded)
             return null;
 
         var roles = await _userManager.GetRolesAsync(user);
