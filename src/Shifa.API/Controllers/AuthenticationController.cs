@@ -36,12 +36,25 @@ public class AuthenticationController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
-        var result = await _authenticationService.LoginAsync(request);
+        try
+        {
+            var result = await _authenticationService.LoginAsync(request);
 
-        if (result is null)
-            return Unauthorized(new { message = "Invalid email or password." });
+            if (result is null)
+                return Unauthorized(new
+                {
+                    message = "Invalid email or password."
+                });
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(423, new
+            {
+                message = ex.Message
+            });
+        }
     }
 
     [HttpPost("refresh")]

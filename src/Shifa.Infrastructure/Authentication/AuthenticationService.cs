@@ -49,6 +49,14 @@ public class AuthenticationService : IAuthenticationService
             request.Password,
             lockoutOnFailure: true);
 
+        if (signInResult.IsLockedOut)
+        {
+            var lockoutEnd = await _userManager.GetLockoutEndDateAsync(user);
+
+            throw new UnauthorizedAccessException(
+                $"Account is temporarily locked until {lockoutEnd:O}.");
+        }
+
         if (!signInResult.Succeeded)
             return null;
 
@@ -240,4 +248,5 @@ public class AuthenticationService : IAuthenticationService
 
         return true;
     }
+
 }
