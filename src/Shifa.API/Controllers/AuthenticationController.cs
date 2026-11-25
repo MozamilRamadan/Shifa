@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Shifa.Application.DTOs.Authentication;
 using Shifa.Application.Interfaces.Authentication;
-
+using Microsoft.AspNetCore.RateLimiting;
 namespace Shifa.API.Controllers;
 
 [ApiController]
@@ -34,6 +34,10 @@ public class AuthenticationController : ControllerBase
     }
 
     [HttpPost("login")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status423Locked)]
+    [EnableRateLimiting("Auth")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
         try
