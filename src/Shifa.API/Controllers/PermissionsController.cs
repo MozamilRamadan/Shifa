@@ -147,4 +147,45 @@ public class PermissionsController : ControllerBase
             request.RespondedAt
         });
     }
+
+    [HttpPut("{requestId:int}/revoke")]
+    [Authorize(Roles = "Patient")]
+    public async Task<IActionResult> RevokePermission(int requestId)
+    {
+        var userId = User.FindFirstValue(
+            ClaimTypes.NameIdentifier);
+
+        if (!int.TryParse(userId, out var currentUserId))
+            return Unauthorized();
+
+        var patient = await _context.Patients
+            .FirstOrDefaultAsync(p => p.UserId == currentUserId);
+
+        if (patient is null)
+            return NotFound("Patient profile not found.");
+
+        var request = await _context.PermissionRequests
+            .FirstOrDefaultAsync(p =>
+                p.Id == requestId &&
+                p.PatientId == patient.Id);
+
+        if (request is null)
+            return NotFound("Permission request not found.");
+
+        if (request.Status != PermissionStatus.Approved)
+            return Conflict("Only approved permissions can be revoked.");
+
+        request.Status = PermissionStatus.Revoked;
+        request.RespondedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            request.Id,
+            request.Status,
+            request.RespondedAt
+        });
+    }
+
 }

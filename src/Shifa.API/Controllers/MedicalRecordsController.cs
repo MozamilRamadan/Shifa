@@ -189,6 +189,16 @@ public class MedicalRecordsController : ControllerBase
         if (!patientExists)
             return NotFound("Patient not found.");
 
+        var hasPermission = await _context.PermissionRequests
+        .AnyAsync(p =>
+            p.PatientId == request.PatientId &&
+            p.DoctorId == doctor.Id &&
+            p.Status == Shifa.Domain.Enums.PermissionStatus.Approved &&
+            (p.ExpiresAt == null || p.ExpiresAt > DateTime.UtcNow));
+
+            if (!hasPermission)
+                return Forbid();
+
         var record = new MedicalRecord
         {
             PatientId = request.PatientId,
