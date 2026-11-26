@@ -36,5 +36,13 @@ public class MedicalRecordConfiguration
         builder.HasIndex(m => m.DoctorId);
 
         builder.HasIndex(m => m.RecordDate);
+
+        builder.HasIndex(m => new
+        {
+            m.PatientId,
+            m.RecordDate
+        });
+
+
     }
 }

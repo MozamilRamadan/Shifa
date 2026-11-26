@@ -20,5 +20,14 @@ public class PermissionRequestConfiguration
         builder.HasIndex(p => new { p.PatientId, p.DoctorId });
 
         builder.HasIndex(p => p.Status);
+
+        builder.HasIndex(p => new
+        {
+            p.PatientId,
+            p.DoctorId,
+            p.Status,
+            p.ExpiresAt
+        });
+
     }
 }
