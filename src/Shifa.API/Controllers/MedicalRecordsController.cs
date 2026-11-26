@@ -31,6 +31,11 @@ public class MedicalRecordsController : ControllerBase
     int pageNumber = 1,
     int pageSize = 10)
     {
+        if (pageNumber < 1 || pageSize < 1)
+            return BadRequest("Invalid pagination parameters.");
+
+        pageSize = Math.Min(pageSize, 100);
+
         var authorizationResult =
             await _authorizationService.AuthorizeAsync(
                 User,
@@ -61,10 +66,7 @@ public class MedicalRecordsController : ControllerBase
             if (!hasPermission)
                 return Forbid();
 
-            if (pageNumber < 1 || pageSize < 1)
-                return BadRequest("Invalid pagination parameters.");
 
-            pageSize = Math.Min(pageSize, 100);
         }
 
         var query =

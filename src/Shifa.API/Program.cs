@@ -105,6 +105,8 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
+
 // HTTP Pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -126,9 +128,5 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-var logger = app.Services
-    .GetRequiredService<ILogger<Program>>();
-app.UseExceptionHandler();
-app.UseExceptionHandler();
 
 app.Run();

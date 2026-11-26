@@ -55,6 +55,7 @@ public class PatientsController : ControllerBase
     }
 
     [HttpGet("me")]
+    [Authorize(Roles = "Patient")]
     public async Task<IActionResult> GetMyProfile()
     {
         var userId = User.FindFirstValue(

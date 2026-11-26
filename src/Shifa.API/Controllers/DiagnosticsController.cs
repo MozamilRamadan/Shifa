@@ -6,9 +6,9 @@ namespace Shifa.API.Controllers;
 [Route("api/[controller]")]
 public class DiagnosticsController : ControllerBase
 {
-    [HttpGet("test-exception")]
-    public IActionResult TestException()
-    {
-        throw new Exception("Sensitive internal error.");
-    }
+    //[HttpGet("test-exception")]
+    //public IActionResult TestException()
+    //{
+    //    throw new Exception("Sensitive internal error.");
+    //}
 }
