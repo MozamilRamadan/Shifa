@@ -5,7 +5,6 @@ using Shifa.Application.DTOs.MedicalRecords;
 using Shifa.Domain.Entities.MedicalRecords;
 using Shifa.Infrastructure.Persistence;
 using System.Security.Claims;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Shifa.API.Controllers;
 
