@@ -7,6 +7,7 @@ using Shifa.Infrastructure;
 using Shifa.Infrastructure.Identity;
 using System.Text;
 using System.Threading.RateLimiting;
+using Shifa.API.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,6 +99,10 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
+builder.Services.AddProblemDetails();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 var app = builder.Build();
 
 // HTTP Pipeline
@@ -121,5 +126,9 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+var logger = app.Services
+    .GetRequiredService<ILogger<Program>>();
+app.UseExceptionHandler();
+app.UseExceptionHandler();
 
 app.Run();

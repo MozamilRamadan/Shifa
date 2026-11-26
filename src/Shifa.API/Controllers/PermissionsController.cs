@@ -71,7 +71,9 @@ public class PermissionsController : ControllerBase
 
     [HttpGet("my-requests")]
     [Authorize(Roles = "Patient")]
-    public async Task<IActionResult> GetMyRequests()
+    public async Task<IActionResult> GetMyRequests(
+    int pageNumber = 1,
+    int pageSize = 10)
     {
         var userId = User.FindFirstValue(
             ClaimTypes.NameIdentifier);
@@ -85,10 +87,21 @@ public class PermissionsController : ControllerBase
         if (patient is null)
             return NotFound("Patient profile not found.");
 
-        var requests = await _context.PermissionRequests
+        if (pageNumber < 1 || pageSize < 1)
+            return BadRequest("Invalid pagination parameters.");
+
+        pageSize = Math.Min(pageSize, 100);
+
+        var query = _context.PermissionRequests
             .AsNoTracking()
-            .Where(p => p.PatientId == patient.Id)
+            .Where(p => p.PatientId == patient.Id);
+
+        var totalCount = await query.CountAsync();
+
+        var requests = await query
             .OrderByDescending(p => p.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(p => new
             {
                 p.Id,
@@ -100,7 +113,15 @@ public class PermissionsController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(requests);
+        return Ok(new
+        {
+            pageNumber,
+            pageSize,
+            totalCount,
+            totalPages = (int)Math.Ceiling(
+                totalCount / (double)pageSize),
+            data = requests
+        });
     }
 
     [HttpPut("{requestId:int}/respond")]
@@ -187,5 +208,66 @@ public class PermissionsController : ControllerBase
             request.RespondedAt
         });
     }
+
+    [HttpGet("my-approved-patients")]
+    [Authorize(Roles = "Doctor")]
+    public async Task<IActionResult> GetMyApprovedPatients(
+    int pageNumber = 1,
+    int pageSize = 10)
+    {
+        if (pageNumber < 1 || pageSize < 1)
+            return BadRequest("Invalid pagination parameters.");
+
+        pageSize = Math.Min(pageSize, 100);
+
+        var userId = User.FindFirstValue(
+            ClaimTypes.NameIdentifier);
+
+        if (!int.TryParse(userId, out var currentUserId))
+            return Unauthorized();
+
+        var doctor = await _context.Doctors
+            .FirstOrDefaultAsync(d => d.UserId == currentUserId);
+
+        if (doctor is null)
+            return Forbid();
+
+        var query =
+            from permission in _context.PermissionRequests.AsNoTracking()
+            join patient in _context.Patients
+                on permission.PatientId equals patient.Id
+            join user in _context.Users
+                on patient.UserId equals user.Id
+            where permission.DoctorId == doctor.Id
+                && permission.Status == PermissionStatus.Approved
+                && (permission.ExpiresAt == null ||
+                    permission.ExpiresAt > DateTime.UtcNow)
+            select new
+            {
+                PatientId = patient.Id,
+                FullName = user.FirstName + " " + user.LastName,
+                permission.Status,
+                permission.ExpiresAt
+            };
+
+        var totalCount = await query.CountAsync();
+
+        var patients = await query
+            .OrderBy(p => p.PatientId)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Ok(new
+        {
+            pageNumber,
+            pageSize,
+            totalCount,
+            totalPages = (int)Math.Ceiling(
+                totalCount / (double)pageSize),
+            data = patients
+        });
+    }
+
 
 }

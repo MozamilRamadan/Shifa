@@ -5,6 +5,7 @@ using Shifa.Application.DTOs.MedicalRecords;
 using Shifa.Domain.Entities.MedicalRecords;
 using Shifa.Infrastructure.Persistence;
 using System.Security.Claims;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Shifa.API.Controllers;
 
@@ -25,7 +26,10 @@ public class MedicalRecordsController : ControllerBase
     }
 
     [HttpGet("patient/{patientId:int}")]
-    public async Task<IActionResult> GetPatientRecords(int patientId)
+    public async Task<IActionResult> GetPatientRecords(
+    int patientId,
+    int pageNumber = 1,
+    int pageSize = 10)
     {
         var authorizationResult =
             await _authorizationService.AuthorizeAsync(
@@ -56,44 +60,58 @@ public class MedicalRecordsController : ControllerBase
 
             if (!hasPermission)
                 return Forbid();
+
+            if (pageNumber < 1 || pageSize < 1)
+                return BadRequest("Invalid pagination parameters.");
+
+            pageSize = Math.Min(pageSize, 100);
         }
 
-        var records = await (
-           from record in _context.MedicalRecords.AsNoTracking()
-           join doctor in _context.Doctors
-               on record.DoctorId equals doctor.Id
-           join user in _context.Users
-               on doctor.UserId equals user.Id
-           where record.PatientId == patientId
-           orderby record.RecordDate descending
+        var query =
+    from record in _context.MedicalRecords.AsNoTracking()
+    join doctor in _context.Doctors
+        on record.DoctorId equals doctor.Id
+    join user in _context.Users
+        on doctor.UserId equals user.Id
+    where record.PatientId == patientId
+    select new
+    {
+        record.Id,
+        record.Title,
+        record.Diagnosis,
+        record.Description,
+        record.Treatment,
+        record.Prescription,
+        record.RecordDate,
+        DoctorName = user.FirstName + " " + user.LastName,
+        Files = record.Files.Select(file => new
+        {
+            file.Id,
+            file.FileName,
+            file.FileUrl,
+            file.FileType,
+            file.FileSize,
+            file.UploadedAt
+        }).ToList()
+    };
 
-           select new
-           {
-               record.Id,
-               record.Title,
-               record.Diagnosis,
-               record.Description,
-               record.Treatment,
-               record.Prescription,
-               record.RecordDate,
+        var totalCount = await query.CountAsync();
 
-               DoctorName = user.FirstName + " " + user.LastName,
+        var records = await query
+            .OrderByDescending(r => r.RecordDate)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
 
-               Files = record.Files.Select(file => new
-               {
-                   file.Id,
-                   file.FileName,
-                   file.FileUrl,
-                   file.FileType,
-                   file.FileSize,
-                   file.UploadedAt
-               }).ToList()
-           }
-
-
-       ).ToListAsync();
-
-        return Ok(records);
+        return Ok(new
+        {
+            pageNumber,
+            pageSize,
+            totalCount,
+            totalPages = (int)Math.Ceiling(
+                totalCount / (double)pageSize),
+            data = records
+        });
     }
 
 
