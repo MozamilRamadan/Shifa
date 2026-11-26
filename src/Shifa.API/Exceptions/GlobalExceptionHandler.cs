@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Shifa.Application.Exceptions;
 
 namespace Shifa.API.Exceptions;
 
@@ -11,22 +13,45 @@ public sealed class GlobalExceptionHandler(
         Exception exception,
         CancellationToken cancellationToken)
     {
-        logger.LogError(
-            exception,
-            "Unhandled exception. TraceId: {TraceId}",
-            httpContext.TraceIdentifier);
+        var (statusCode, title) = exception switch
+        {
+            NotFoundException =>
+                (StatusCodes.Status404NotFound, "Resource not found."),
+
+            ForbiddenException =>
+                (StatusCodes.Status403Forbidden, "Access denied."),
+
+            ArgumentException =>
+                (StatusCodes.Status400BadRequest, "Invalid request."),
+
+            _ =>
+                (StatusCodes.Status500InternalServerError,
+                 "An unexpected error occurred.")
+        };
+
+        if (statusCode == StatusCodes.Status500InternalServerError)
+        {
+            logger.LogError(
+                exception,
+                "Unhandled exception. TraceId: {TraceId}",
+                httpContext.TraceIdentifier);
+        }
 
         var problemDetails = new ProblemDetails
         {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "An error occurred while processing your request."
+            Status = statusCode,
+            Title = title
         };
+
+        if (statusCode != StatusCodes.Status500InternalServerError)
+        {
+            problemDetails.Detail = exception.Message;
+        }
 
         problemDetails.Extensions["traceId"] =
             httpContext.TraceIdentifier;
 
-        httpContext.Response.StatusCode =
-            StatusCodes.Status500InternalServerError;
+        httpContext.Response.StatusCode = statusCode;
 
         await httpContext.Response.WriteAsJsonAsync(
             problemDetails,

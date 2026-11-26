@@ -6,7 +6,9 @@ using Shifa.Infrastructure.Identity;
 using Shifa.Infrastructure.Persistence;
 using Shifa.Infrastructure.Authentication;
 using Shifa.Application.Interfaces.Authentication;
-
+using Shifa.Application.Interfaces.MedicalRecords;
+using Shifa.Application.Services.MedicalRecords;
+using Shifa.Infrastructure.Repositories.MedicalRecords;
 namespace Shifa.Infrastructure;
 
 public static class DependencyInjection
@@ -44,6 +46,9 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
+        services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
+        services.AddScoped<IMedicalRecordService, MedicalRecordService>();
+
         return services;
     }
 }
