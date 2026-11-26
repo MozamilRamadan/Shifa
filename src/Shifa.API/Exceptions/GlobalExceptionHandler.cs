@@ -13,9 +13,16 @@ public sealed class GlobalExceptionHandler(
         Exception exception,
         CancellationToken cancellationToken)
     {
-        var (statusCode, title) = exception switch
-        {
-            NotFoundException =>
+            if (exception is OperationCanceledException)
+            {
+                return false;
+            }
+            var (statusCode, title) = exception switch
+            {
+                ConflictException =>
+                 (StatusCodes.Status409Conflict, "Conflict."),
+
+                NotFoundException =>
                 (StatusCodes.Status404NotFound, "Resource not found."),
 
             ForbiddenException =>

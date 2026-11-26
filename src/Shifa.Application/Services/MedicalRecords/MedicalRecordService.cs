@@ -20,7 +20,7 @@ public class MedicalRecordService : IMedicalRecordService
         return await _repository.GetPatientIdByRecordIdAsync(recordId);
     }
 
-    public async Task<PagedMedicalRecordsResponse?> GetPatientRecordsAsync(
+    public async Task<PagedMedicalRecordsResponse> GetPatientRecordsAsync(
         int patientId,
         int currentUserId,
         bool isOwnerOrAdmin,

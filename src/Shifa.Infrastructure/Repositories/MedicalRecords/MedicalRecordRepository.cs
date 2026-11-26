@@ -1,7 +1,6 @@
 
 using Microsoft.EntityFrameworkCore;
 using Shifa.Application.DTOs.MedicalRecords;
-using Shifa.Application.Exceptions;
 using Shifa.Application.Interfaces.MedicalRecords;
 using Shifa.Domain.Entities.MedicalRecords;
 using Shifa.Domain.Enums;
@@ -136,8 +135,11 @@ public class MedicalRecordRepository : IMedicalRecordRepository
         await _context.SaveChangesAsync();
     }
 
-    public Task<int?> GetPatientIdByRecordIdAsync(int recordId)
+    public async Task<int?> GetPatientIdByRecordIdAsync(int recordId)
     {
-        throw new ForbiddenException("No Record Found ");
+        return await _context.MedicalRecords
+            .Where(record => record.Id == recordId)
+            .Select(record => (int?)record.PatientId)
+            .FirstOrDefaultAsync();
     }
 }
