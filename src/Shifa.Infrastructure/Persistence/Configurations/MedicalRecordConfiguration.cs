@@ -23,10 +23,10 @@ public class MedicalRecordConfiguration
             .HasMaxLength(5000);
 
         builder.Property(m => m.Treatment)
-            .HasMaxLength(3000);
+            .HasMaxLength(5000);
 
         builder.Property(m => m.Prescription)
-            .HasMaxLength(3000);
+            .HasMaxLength(5000);
 
         builder.Property(m => m.Status)
             .HasConversion<int>();

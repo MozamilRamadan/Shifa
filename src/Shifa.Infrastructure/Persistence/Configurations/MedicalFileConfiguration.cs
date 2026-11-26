@@ -23,6 +23,11 @@ public class MedicalFileConfiguration
             .HasMaxLength(100)
             .IsRequired();
 
+        builder.ToTable(table =>
+            table.HasCheckConstraint(
+                "CK_MedicalFiles_FileSize",
+                "\"FileSize\" >= 0"));
+
         builder.Property(f => f.StorageIdentifier)
             .HasMaxLength(500);
 
