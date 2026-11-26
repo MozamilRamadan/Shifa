@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Shifa.Infrastructure.Authentication;
 using Shifa.Infrastructure.Identity;
@@ -14,7 +16,6 @@ public class AuthenticationServiceTests
     [Fact]
     public async Task LoginAsync_ShouldReturnNull_WhenUserDoesNotExist()
     {
-        // Arrange
         var userStore = new Mock<IUserStore<ApplicationUser>>();
 
         var userManager = new Mock<UserManager<ApplicationUser>>(
@@ -27,6 +28,7 @@ public class AuthenticationServiceTests
 
         var jwtService = new Mock<IJwtTokenService>();
         var refreshService = new Mock<IRefreshTokenService>();
+        var signInManager = CreateSignInManager(userManager.Object);
 
         var options = Options.Create(new JwtOptions());
 
@@ -41,7 +43,8 @@ public class AuthenticationServiceTests
             jwtService.Object,
             refreshService.Object,
             options,
-            context);
+            context,
+            signInManager.Object);
 
         var request = new Shifa.Application.DTOs.Authentication.LoginRequest
         {
@@ -49,17 +52,21 @@ public class AuthenticationServiceTests
             Password = "Password123"
         };
 
-        // Act
         var result = await service.LoginAsync(request);
 
-        // Assert
         Assert.Null(result);
+
+        signInManager.Verify(
+            x => x.CheckPasswordSignInAsync(
+                It.IsAny<ApplicationUser>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>()),
+            Times.Never);
     }
 
     [Fact]
     public async Task LoginAsync_ShouldReturnNull_WhenUserIsInactive()
     {
-        // Arrange
         var user = new ApplicationUser
         {
             Id = 1,
@@ -80,6 +87,7 @@ public class AuthenticationServiceTests
 
         var jwtService = new Mock<IJwtTokenService>();
         var refreshService = new Mock<IRefreshTokenService>();
+        var signInManager = CreateSignInManager(userManager.Object);
 
         var options = Options.Create(new JwtOptions());
 
@@ -94,7 +102,8 @@ public class AuthenticationServiceTests
             jwtService.Object,
             refreshService.Object,
             options,
-            context);
+            context,
+            signInManager.Object);
 
         var request = new Shifa.Application.DTOs.Authentication.LoginRequest
         {
@@ -102,17 +111,28 @@ public class AuthenticationServiceTests
             Password = "Password123"
         };
 
-        // Act
         var result = await service.LoginAsync(request);
 
-        // Assert
         Assert.Null(result);
 
-        userManager.Verify(
-            x => x.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()),
+        signInManager.Verify(
+            x => x.CheckPasswordSignInAsync(
+                It.IsAny<ApplicationUser>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>()),
             Times.Never);
     }
 
-
-
+    private static Mock<SignInManager<ApplicationUser>> CreateSignInManager(
+        UserManager<ApplicationUser> userManager)
+    {
+        return new Mock<SignInManager<ApplicationUser>>(
+            userManager,
+            Mock.Of<IHttpContextAccessor>(),
+            Mock.Of<IUserClaimsPrincipalFactory<ApplicationUser>>(),
+            Options.Create(new IdentityOptions()),
+            Mock.Of<ILogger<SignInManager<ApplicationUser>>>(),
+            Mock.Of<Microsoft.AspNetCore.Authentication.IAuthenticationSchemeProvider>(),
+            Mock.Of<IUserConfirmation<ApplicationUser>>());
+    }
 }

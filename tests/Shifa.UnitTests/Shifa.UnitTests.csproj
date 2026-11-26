@@ -20,9 +20,10 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Shifa.Application\Shifa.Application.csproj" />
-    <ProjectReference Include="..\..\src\Shifa.Infrastructure\Shifa.Infrastructure.csproj" />
-  </ItemGroup>
+<ItemGroup>
+  <ProjectReference Include="..\..\src\Shifa.Application\Shifa.Application.csproj" />
+  <ProjectReference Include="..\..\src\Shifa.Infrastructure\Shifa.Infrastructure.csproj" />
+  <ProjectReference Include="..\..\src\Shifa.API\Shifa.API.csproj" />
+</ItemGroup>
 
 </Project>
