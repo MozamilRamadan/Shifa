@@ -2,14 +2,17 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Shifa.Application.Interfaces.Appointments;
 using Shifa.Application.Interfaces.Authentication;
 using Shifa.Application.Interfaces.MedicalRecords;
 using Shifa.Application.Interfaces.Permissions;
+using Shifa.Application.Services.Appointments;
 using Shifa.Application.Services.MedicalRecords;
 using Shifa.Application.Services.Permissions;
 using Shifa.Infrastructure.Authentication;
 using Shifa.Infrastructure.Identity;
 using Shifa.Infrastructure.Persistence;
+using Shifa.Infrastructure.Repositories.Appointments;
 using Shifa.Infrastructure.Repositories.MedicalRecords;
 using Shifa.Infrastructure.Repositories.Permissions;
 namespace Shifa.Infrastructure;
@@ -53,7 +56,8 @@ public static class DependencyInjection
         services.AddScoped<IMedicalRecordService, MedicalRecordService>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IPermissionService, PermissionService>();
-
+        services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+        services.AddScoped<IAppointmentService, AppointmentService>();
         return services;
     }
 }
