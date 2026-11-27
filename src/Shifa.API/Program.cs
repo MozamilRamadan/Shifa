@@ -127,6 +127,9 @@ app.UseHttpsRedirection();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+await AdminSeeder.SeedAsync(
+    app.Services,
+    app.Configuration);
 app.MapControllers();
 
 app.Run();
