@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Shifa.Application.Interfaces.Admin;
 using Shifa.Application.Interfaces.Appointments;
 using Shifa.Application.Interfaces.Authentication;
+using Shifa.Application.Interfaces.Doctors;
 using Shifa.Application.Interfaces.MedicalRecords;
 using Shifa.Application.Interfaces.Permissions;
 using Shifa.Application.Interfaces.Users;
@@ -18,6 +19,7 @@ using Shifa.Infrastructure.Identity;
 using Shifa.Infrastructure.Persistence;
 using Shifa.Infrastructure.Repositories.Admin;
 using Shifa.Infrastructure.Repositories.Appointments;
+using Shifa.Infrastructure.Repositories.Doctors;
 using Shifa.Infrastructure.Repositories.MedicalRecords;
 using Shifa.Infrastructure.Repositories.Permissions;
 using Shifa.Infrastructure.Repositories.Users;
@@ -68,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IDoctorRepository, DoctorRepository>();
 
         return services;
     }

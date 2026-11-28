@@ -1,8 +1,9 @@
 
+using Shifa.Domain.Entities.Appointments;
 using Shifa.Domain.Entities.Common;
 using Shifa.Domain.Entities.MedicalRecords;
 using Shifa.Domain.Entities.Permissions;
-using Shifa.Domain.Entities.Appointments;
+using Shifa.Domain.Enums;
 
 namespace Shifa.Domain.Entities.Doctors;
 
@@ -20,7 +21,8 @@ public class Doctor : AuditableEntity
 
     public string? ClinicAddress { get; set; }
 
-    public bool IsVerified { get; set; }
+    public DoctorApplicationStatus ApplicationStatus { get; set; }
+    = DoctorApplicationStatus.Pending;
 
 
     public ICollection<MedicalRecord> MedicalRecords { get; set; }

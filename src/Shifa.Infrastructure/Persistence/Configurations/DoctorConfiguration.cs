@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shifa.Domain.Entities.Doctors;
+using Shifa.Domain.Enums;
 
 namespace Shifa.Infrastructure.Persistence.Configurations;
 
@@ -29,5 +30,10 @@ public class DoctorConfiguration : IEntityTypeConfiguration<Doctor>
 
         builder.HasIndex(d => d.LicenseNumber)
             .IsUnique();
+
+        builder.Property(d => d.ApplicationStatus)
+            .IsRequired()
+            .HasConversion<int>()
+            .HasDefaultValue(DoctorApplicationStatus.Pending);
     }
 }

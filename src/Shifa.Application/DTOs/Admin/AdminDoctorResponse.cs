@@ -1,4 +1,6 @@
-﻿namespace Shifa.Application.DTOs.Admin;
+﻿using Shifa.Domain.Enums;
+
+namespace Shifa.Application.DTOs.Admin;
 
 public class AdminDoctorResponse
 {
@@ -9,6 +11,6 @@ public class AdminDoctorResponse
     public string Email { get; set; } = string.Empty;
     public string Specialization { get; set; } = string.Empty;
     public string LicenseNumber { get; set; } = string.Empty;
-    public bool IsVerified { get; set; }
+    public DoctorApplicationStatus ApplicationStatus { get; set; }
     public DateTime CreatedAt { get; set; }
 }
