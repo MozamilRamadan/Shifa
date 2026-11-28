@@ -17,7 +17,7 @@ namespace Shifa.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -293,6 +293,11 @@ namespace Shifa.Infrastructure.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("ApplicationStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("ClinicAddress")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -301,9 +306,6 @@ namespace Shifa.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsVerified")
                         .HasColumnType("boolean");
 
                     b.Property<string>("LicenseNumber")
@@ -380,7 +382,10 @@ namespace Shifa.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("MedicalRecordId");
 
-                    b.ToTable("MedicalFiles");
+                    b.ToTable("MedicalFiles", t =>
+                        {
+                            t.HasCheckConstraint("CK_MedicalFiles_FileSize", "\"FileSize\" >= 0 AND \"FileSize\" <= 20971520");
+                        });
                 });
 
             modelBuilder.Entity("Shifa.Domain.Entities.MedicalRecords.MedicalRecord", b =>
@@ -413,8 +418,8 @@ namespace Shifa.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Prescription")
-                        .HasMaxLength(3000)
-                        .HasColumnType("character varying(3000)");
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
 
                     b.Property<DateTime>("RecordDate")
                         .HasColumnType("timestamp with time zone");
@@ -428,8 +433,8 @@ namespace Shifa.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.Property<string>("Treatment")
-                        .HasMaxLength(3000)
-                        .HasColumnType("character varying(3000)");
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -441,6 +446,8 @@ namespace Shifa.Infrastructure.Persistence.Migrations
                     b.HasIndex("PatientId");
 
                     b.HasIndex("RecordDate");
+
+                    b.HasIndex("PatientId", "RecordDate");
 
                     b.ToTable("MedicalRecords");
                 });
@@ -539,6 +546,8 @@ namespace Shifa.Infrastructure.Persistence.Migrations
                     b.HasIndex("Status");
 
                     b.HasIndex("PatientId", "DoctorId");
+
+                    b.HasIndex("PatientId", "DoctorId", "Status", "ExpiresAt");
 
                     b.ToTable("PermissionRequests");
                 });

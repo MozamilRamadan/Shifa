@@ -9,6 +9,7 @@ using Shifa.Application.Interfaces.Authentication;
 using Shifa.Application.Interfaces.Doctors;
 using Shifa.Application.Interfaces.MedicalRecords;
 using Shifa.Application.Interfaces.Permissions;
+using Shifa.Application.Interfaces.Storage;
 using Shifa.Application.Interfaces.Users;
 using Shifa.Application.Services.Admin;
 using Shifa.Application.Services.Appointments;
@@ -25,6 +26,7 @@ using Shifa.Infrastructure.Repositories.Doctors;
 using Shifa.Infrastructure.Repositories.MedicalRecords;
 using Shifa.Infrastructure.Repositories.Permissions;
 using Shifa.Infrastructure.Repositories.Users;
+using Shifa.Infrastructure.Storage;
 
 namespace Shifa.Infrastructure;
 
@@ -68,6 +70,8 @@ public static class DependencyInjection
         // Medical Records
         services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
         services.AddScoped<IMedicalRecordService, MedicalRecordService>();
+        services.AddScoped<IMedicalFileRepository, MedicalFileRepository>();
+        services.AddScoped<IMedicalFileService, MedicalFileService>();
 
         // Permissions
         services.AddScoped<IPermissionRepository, PermissionRepository>();
@@ -88,6 +92,18 @@ public static class DependencyInjection
         // Doctors
         services.AddScoped<IDoctorRepository, DoctorRepository>();
         services.AddScoped<IDoctorService, DoctorService>();
+
+        //Cloudinary
+        var cloudinarySettings = configuration
+            .GetSection(CloudinarySettings.SectionName)
+            .Get<CloudinarySettings>()
+            ?? throw new InvalidOperationException(
+                "Cloudinary configuration is missing.");
+
+        services.AddSingleton(cloudinarySettings);
+
+        services.AddHttpClient<IFileStorageService, CloudinaryFileStorageService>();
+
 
         return services;
     }

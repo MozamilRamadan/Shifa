@@ -48,7 +48,7 @@ public class MedicalRecordRepository : IMedicalRecordRepository
                     {
                         Id = file.Id,
                         FileName = file.FileName,
-                        FileUrl = file.FileUrl,
+                        //FileUrl = file.FileUrl,
                         FileType = file.FileType,
                         FileSize = file.FileSize,
                         UploadedAt = file.UploadedAt
@@ -87,7 +87,7 @@ public class MedicalRecordRepository : IMedicalRecordRepository
                     {
                         Id = file.Id,
                         FileName = file.FileName,
-                        FileUrl = file.FileUrl,
+                        //FileUrl = file.FileUrl,
                         FileType = file.FileType,
                         FileSize = file.FileSize,
                         UploadedAt = file.UploadedAt

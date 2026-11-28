@@ -3,6 +3,7 @@ using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Shifa.Application.DTOs.Storage;
 using Shifa.Application.Interfaces.Storage;
+using System.Net.Http;
 
 namespace Shifa.Infrastructure.Storage;
 
@@ -11,10 +12,18 @@ public class CloudinaryFileStorageService : IFileStorageService
     private const string Folder = "shifa/medical-files";
 
     private readonly Cloudinary _cloudinary;
-
-    public CloudinaryFileStorageService(Cloudinary cloudinary)
+    private readonly HttpClient _httpClient;
+    public CloudinaryFileStorageService(CloudinarySettings settings, HttpClient httpClient)
     {
-        _cloudinary = cloudinary;
+        _httpClient = httpClient;
+
+        var account = new Account(
+            settings.CloudName,
+            settings.ApiKey,
+            settings.ApiSecret);
+
+        _cloudinary = new Cloudinary(account);
+        _cloudinary.Api.Secure = true;
     }
 
     public async Task<FileStorageResult> UploadAsync(
@@ -72,6 +81,72 @@ public class CloudinaryFileStorageService : IFileStorageService
             FileFormat = extension.TrimStart('.'),
             FileSize = uploadResult.Bytes
         };
+    }
+
+    public async Task<Stream> DownloadAsync(
+    string storageIdentifier,
+    CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (string.IsNullOrWhiteSpace(storageIdentifier))
+            throw new ArgumentException(
+                "Storage identifier is required.",
+                nameof(storageIdentifier));
+
+        var fileUrl = _cloudinary.Api.Url
+            .ResourceType("raw")
+            .Type("authenticated")
+            .Signed(true)
+            .BuildUrl(storageIdentifier);
+
+        using var response = await _httpClient.GetAsync(
+            fileUrl,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        const long maxFileSize = 20 * 1024 * 1024;
+
+        if (response.Content.Headers.ContentLength > maxFileSize)
+            throw new InvalidOperationException(
+                "The requested file exceeds the maximum allowed size.");
+
+        await using var sourceStream =
+            await response.Content.ReadAsStreamAsync(cancellationToken);
+
+        var memoryStream = new MemoryStream();
+        var buffer = new byte[81920];
+        long totalBytes = 0;
+
+        try
+        {
+            int bytesRead;
+
+            while ((bytesRead = await sourceStream.ReadAsync(
+                       buffer.AsMemory(0, buffer.Length),
+                       cancellationToken)) > 0)
+            {
+                totalBytes += bytesRead;
+
+                if (totalBytes > maxFileSize)
+                    throw new InvalidOperationException(
+                        "The requested file exceeds the maximum allowed size.");
+
+                await memoryStream.WriteAsync(
+                    buffer.AsMemory(0, bytesRead),
+                    cancellationToken);
+            }
+
+            memoryStream.Position = 0;
+            return memoryStream;
+        }
+        catch
+        {
+            await memoryStream.DisposeAsync();
+            throw;
+        }
     }
 
     public async Task DeleteAsync(

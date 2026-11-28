@@ -9,6 +9,9 @@ public interface IFileStorageService
         string fileName,
         string contentType,
         CancellationToken cancellationToken = default);
+    Task<Stream> DownloadAsync(
+    string storageIdentifier,
+    CancellationToken cancellationToken = default);
 
     Task DeleteAsync(
         string storageIdentifier,
