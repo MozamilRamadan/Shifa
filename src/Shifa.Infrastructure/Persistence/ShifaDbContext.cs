@@ -51,6 +51,10 @@ public class ShifaDbContext
             .HasForeignKey<Doctor>(d => d.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Entity<Doctor>()
+            .HasIndex(d => d.LicenseNumber)
+            .IsUnique();
+
         // RefreshToken - ApplicationUser
         builder.Entity<RefreshToken>()
             .HasOne<ApplicationUser>()
