@@ -1,4 +1,5 @@
 ﻿using Shifa.Application.DTOs.Admin;
+using Shifa.Domain.Enums;
 
 namespace Shifa.Application.Interfaces.Admin;
 
@@ -16,7 +17,7 @@ public interface IAdminRepository
 
     Task<bool> UpdateUserStatusAsync(int userId, bool isActive);
 
-    Task<bool> UpdateDoctorVerificationAsync(
+    Task<bool> UpdateDoctorApplicationStatusAsync(
         int doctorId,
-        bool isVerified);
+        DoctorApplicationStatus applicationStatus);
 }

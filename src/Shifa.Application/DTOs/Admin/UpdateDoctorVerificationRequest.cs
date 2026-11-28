@@ -1,6 +1,8 @@
-﻿namespace Shifa.Application.DTOs.Admin;
+﻿using Shifa.Domain.Enums;
+
+namespace Shifa.Application.DTOs.Admin;
 
 public class UpdateDoctorVerificationRequest
 {
-    public bool IsVerified { get; set; }
+    public DoctorApplicationStatus ApplicationStatus { get; set; }
 }

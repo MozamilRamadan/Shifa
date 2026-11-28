@@ -18,7 +18,7 @@ public interface IAdminService
         int userId,
         UpdateUserStatusRequest request);
 
-    Task UpdateDoctorVerificationAsync(
+    Task UpdateDoctorApplicationStatusAsync(
         int doctorId,
         UpdateDoctorVerificationRequest request);
 }

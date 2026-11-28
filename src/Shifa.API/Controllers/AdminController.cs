@@ -55,12 +55,12 @@ public class AdminController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPut("doctors/{doctorId:int}/verification")]
-    public async Task<IActionResult> UpdateDoctorVerification(
+    [HttpPut("doctors/{doctorId:int}/application-status")]
+    public async Task<IActionResult> UpdateDoctorApplicationStatusAsync(
         int doctorId,
         [FromBody] UpdateDoctorVerificationRequest request)
     {
-        await _adminService.UpdateDoctorVerificationAsync(
+        await _adminService.UpdateDoctorApplicationStatusAsync(
             doctorId, request);
 
         return NoContent();

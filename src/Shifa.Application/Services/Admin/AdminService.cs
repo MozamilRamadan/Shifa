@@ -1,6 +1,7 @@
 ﻿using Shifa.Application.DTOs.Admin;
 using Shifa.Application.Exceptions;
 using Shifa.Application.Interfaces.Admin;
+using Shifa.Domain.Enums;
 
 namespace Shifa.Application.Services.Admin;
 
@@ -52,17 +53,24 @@ public class AdminService : IAdminService
             throw new NotFoundException("User not found.");
     }
 
-    public async Task UpdateDoctorVerificationAsync(
-        int doctorId,
-        UpdateDoctorVerificationRequest request)
+    public async Task UpdateDoctorApplicationStatusAsync(
+       int doctorId,
+       UpdateDoctorVerificationRequest request)
     {
         if (doctorId <= 0)
             throw new ArgumentException("Invalid doctor ID.");
 
         ArgumentNullException.ThrowIfNull(request);
 
-        var updated = await _adminRepository.UpdateDoctorVerificationAsync(
-            doctorId, request.IsVerified);
+        if (request.ApplicationStatus == DoctorApplicationStatus.Pending)
+            throw new ArgumentException("Invalid application status.");
+
+        if (!Enum.IsDefined(request.ApplicationStatus))
+            throw new ArgumentException("Invalid application status.");
+
+        var updated = await _adminRepository.UpdateDoctorApplicationStatusAsync(
+            doctorId,
+            request.ApplicationStatus);
 
         if (!updated)
             throw new NotFoundException("Doctor not found.");

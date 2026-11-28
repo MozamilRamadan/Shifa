@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Shifa.Application.DTOs.Admin;
 using Shifa.Application.Interfaces.Admin;
@@ -26,21 +27,19 @@ public class AdminRepository : IAdminRepository
         return new AdminDashboardResponse
         {
             TotalUsers = await _context.Users.CountAsync(),
-
             TotalPatients = await _context.Patients.CountAsync(),
-
             TotalDoctors = await _context.Doctors.CountAsync(),
 
-            VerifiedDoctors = await _context.Doctors
-                .CountAsync(d => d.IsVerified),
+            VerifiedDoctors = await _context.Doctors.CountAsync(
+                d => d.ApplicationStatus == DoctorApplicationStatus.Approved),
 
-            PendingDoctors = await _context.Doctors
-                .CountAsync(d => !d.IsVerified),
+            PendingDoctors = await _context.Doctors.CountAsync(
+                d => d.ApplicationStatus == DoctorApplicationStatus.Pending),
 
             TotalAppointments = await _context.Appointments.CountAsync(),
 
-            PendingAppointments = await _context.Appointments
-                .CountAsync(a => a.Status == AppointmentStatus.Pending),
+            PendingAppointments = await _context.Appointments.CountAsync(
+                a => a.Status == AppointmentStatus.Pending),
 
             TotalMedicalRecords = await _context.MedicalRecords.CountAsync()
         };
@@ -106,7 +105,7 @@ public class AdminRepository : IAdminRepository
                 Email = user.Email ?? string.Empty,
                 Specialization = doctor.Specialization,
                 LicenseNumber = doctor.LicenseNumber,
-                IsVerified = doctor.IsVerified,
+                ApplicationStatus = doctor.ApplicationStatus,
                 CreatedAt = doctor.CreatedAt
             };
 
@@ -149,9 +148,9 @@ public class AdminRepository : IAdminRepository
         return true;
     }
 
-    public async Task<bool> UpdateDoctorVerificationAsync(
+    public async Task<bool> UpdateDoctorApplicationStatusAsync(
         int doctorId,
-        bool isVerified)
+        DoctorApplicationStatus applicationStatus)
     {
         var doctor = await _context.Doctors
             .FirstOrDefaultAsync(d => d.Id == doctorId);
@@ -159,7 +158,29 @@ public class AdminRepository : IAdminRepository
         if (doctor is null)
             return false;
 
-        doctor.IsVerified = isVerified;
+        if (doctor.ApplicationStatus == applicationStatus)
+            return true;
+
+        if (doctor.ApplicationStatus != DoctorApplicationStatus.Pending)
+            throw new InvalidOperationException(
+                "Only pending applications can be reviewed.");
+
+        var user = await _userManager.FindByIdAsync(
+            doctor.UserId.ToString());
+
+        if (user is null)
+            throw new InvalidOperationException("Doctor user not found.");
+
+        if (applicationStatus == DoctorApplicationStatus.Approved)
+        {
+            var result = await _userManager.AddToRoleAsync(user, "Doctor");
+
+            if (!result.Succeeded)
+                throw new InvalidOperationException(
+                    string.Join("; ", result.Errors.Select(e => e.Description)));
+        }
+
+        doctor.ApplicationStatus = applicationStatus;
         doctor.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
